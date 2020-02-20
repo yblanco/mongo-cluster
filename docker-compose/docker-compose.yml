@@ -1,0 +1,227 @@
+version: '3'
+
+services:
+# Config Servers
+  mongoconfig1:
+    container_name: mongoconfig1
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - REPLSET_CANT=3
+      - FIRST=yes
+      - TYPE_NODE=config
+      - REPLSET_NAME=mongoconfig
+    depends_on:
+      - mongoconfig2
+      - mongoconfig3
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoconfig1:/data/configdb
+    restart: always
+  mongoconfig2:
+    container_name: mongoconfig2
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - TYPE_NODE=config
+      - REPLSET_NAME=mongoconfig
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoconfig2:/data/configdb
+    restart: always
+  mongoconfig3:
+    container_name: mongoconfig3
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - TYPE_NODE=config
+      - REPLSET_NAME=mongoconfig
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoconfig3:/data/configdb
+    restart: always
+# Shard Set 1
+  mongoshard11:
+    container_name: mongoshard11
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - REPLSET_CANT=3
+      - FIRST=yes
+      - TYPE_NODE=shard
+      - REPLSET_NAME=mongoshard1
+    depends_on:
+      - mongoconfig1
+      - mongoshard12
+      - mongoshard13
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoshard11:/data/db
+    restart: always
+  mongoshard12:
+    container_name: mongoshard12
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - TYPE_NODE=shard
+      - REPLSET_NAME=mongoshard1
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoshard12:/data/db
+    restart: always
+  mongoshard13:
+    container_name: mongoshard13
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - TYPE_NODE=shard
+      - REPLSET_NAME=mongoshard1
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoshard13:/data/db
+    restart: always
+# Shard Set 2
+  mongoshard21:
+    container_name: mongoshard21
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - REPLSET_CANT=3
+      - FIRST=yes
+      - TYPE_NODE=shard
+      - REPLSET_NAME=mongoshard2
+    depends_on:
+      - mongoconfig1
+      - mongoshard22
+      - mongoshard23
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoshard21:/data/db
+    restart: always
+  mongoshard22:
+    container_name: mongoshard22
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - TYPE_NODE=shard
+      - REPLSET_NAME=mongoshard2
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoshard22:/data/db
+    restart: always
+  mongoshard23:
+    container_name: mongoshard23
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - TYPE_NODE=shard
+      - REPLSET_NAME=mongoshard2
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoshard23:/data/db
+    restart: always
+# Shard Set 3
+  mongoshard31:
+    container_name: mongoshard31
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - REPLSET_CANT=3
+      - FIRST=yes
+      - TYPE_NODE=shard
+      - REPLSET_NAME=mongoshard3
+    depends_on:
+      - mongoconfig1
+      - mongoshard32
+      - mongoshard33
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoshard31:/data/db
+    restart: always
+  mongoshard32:
+    container_name: mongoshard32
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - TYPE_NODE=shard
+      - REPLSET_NAME=mongoshard3
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoshard32:/data/db
+    restart: always
+  mongoshard33:
+    container_name: mongoshard33
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - TYPE_NODE=shard
+      - REPLSET_NAME=mongoshard3
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+      - mongoshard33:/data/db
+    restart: always
+# Router
+  mongorouter1:
+    container_name: mongorouter1
+    build:
+      context: clusterMongo
+    environment:
+      - SERVER_IP
+      - SHARDS_CANT=3
+      - CONFIG_REPLSET_CANT=3
+      - SHARDS_REPLSET_CANT=3
+      - REPLSET_NAME_SHARD=mongoshard
+      - REPLSET_NAME_CONFIG=mongoconfig
+      - TYPE_NODE=route
+      - MONGO_INITDB_ROOT_USERNAME=developer
+      - MONGO_INITDB_ROOT_PASSWORD=ElLoboSiberiano
+    ports:
+      - "27020:27017"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/mnt/keyfile/mongo-keyfile:/keyfile"
+    depends_on:
+      - mongoconfig1
+      - mongoshard11
+      - mongoshard21
+      - mongoshard31
+    restart: always
+
+volumes:
+  mongoshard32:
+  mongoconfig1:
+  mongoconfig2:
+  mongoconfig3:
+  mongoshard11:
+  mongoshard12:
+  mongoshard13:
+  mongoshard21:
+  mongoshard22:
+  mongoshard23:
+  mongoshard31:
+  mongoshard32:
+  mongoshard33:
